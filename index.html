@@ -1,105 +1,188 @@
 <html>
   <head>
     <title>Where's Zombie</title>
-  </head>
-  <style>
-  #zombie_map {
+      <meta name="description" content="Where's Zombie Raspberry Pi project">
+      <meta name="keywords" content="Zombie, RaspberryPi, map">
+      <meta name="author" content="Zoé Belleton">
+      
+      <style>
+#zombie_map {
     height: 100%;
     width: 100%;
     left: 0;
     position: absolute;
-    top: 0;
+    top: 0;  
     background-color: grey;
 }
-  </style>
-  <body>
-  <script defer
-src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_H6uKYmS-lwxEkE6ULrW2mFnS3z-4cEg&callback=initMap">
-</script>
-    <div id="zombie_map"></div>
+</style>
+  </head>
+    
+  <body style="background-color:#9BDCB7;">
+    <div id="zombie_map"></div>  
+    
     <script>
+    // Map
     var zombie_map;
-    var all_markers = [];
-    var data = `47.270000 -1.517220 zombie
-47.270010 -1.517221 hospital
-47.270020 -1.517222 weapons
-47.270030 -1.517223 weapons
-47.270040 -1.517224 weapons
-47.270050 -1.517225 weapons`;
-var markers = data.split("\n");
-    
-    var options = {
-  enableHighAccuracy: true,
-  timeout: 5000,
-  maximumAge: 0
-};
 
-function set_my_position(pos) {
-  var crd = pos.coords;
+    // Score
+    var score;
 
-  console.log('Votre position actuelle est :');
-  console.log(`Latitude : ${crd.latitude}`);
-  console.log(`Longitude : ${crd.longitude}`);
-  console.log(`La précision est de ${crd.accuracy} mètres.`);
-  
-    icon = "https://icons.iconarchive.com/icons/hopstarter/superhero-avatar/24/Avengers-Hawkeye-icon.png";
+    // Tolerance
+    var tolerance = 10;
     
-    // Position
-    var marker_position = new google.maps.LatLng(crd.latitude, crd.longitude);
-   
-    // Marker
-    var marker = new google.maps.Marker({position: marker_position,
-                                      map: zombie_map,
-                                        icon: icon});
-}
+    // Previous position
+    var old_position;
 
-if(navigator.geolocation) {
-    navigator.geolocation.watchPosition(set_my_position);
-}
-else {
-    alert("Geolocation doesn't work in your browser");
-}
+    // Game objects
+    var amount_of_zombies = 4;
+    var amount_of_weapons = 1;
+    var amount_of_hospitals = 1;
 
-    function initMap() {
-      
-      zombie_map = new google.maps.Map(document.getElementById('zombie_map'), {
-            zoom: 15,
-            center: {lat: 47.270000, lng:-1.517220}
-        });
+    // Points
+    var data = "";
 
-for(var i=0; i < data.length; i++){
+    var inputed_lat = prompt("Please tell us your LATITUDE to play the game");
+    var inputed_lng = prompt("Please tell us your LONGITUDE to play the game");
     
-    // Marker
-    var marker_data = data[i].trim();
-    marker_data = marker_data.split(" ");
-    
-    // LatLng
-    var latitude = marker_data[0];
-    var longitude = marker_data[1];
-  
-    // Emoji
-    var emoji = marker_data[2];
-    
-    var icon = "";
-    if(emoji == "zombie"){
-      icon = "https://icons.iconarchive.com/icons/martin-berube/character/24/Zombie-icon.png";
-    } else if(emoji == "hospital"){
-      icon = "https://icons.iconarchive.com/icons/fatcow/farm-fresh/32/hospital-icon.png";
-    } else if(emoji == "weapons"){
-      icon = "https://icons.iconarchive.com/icons/jeanette-foshee/simpsons-09/32/Townspeople-Frinks-death-ray-gun-icon.png";
-    } 
-    
-    // Position
-    var marker_position = new google.maps.LatLng(latitude, longitude);
-   
-    // Marker
-    var marker = new google.maps.Marker({position: marker_position,
-                                      map: zombie_map,
-                                        icon: icon});
-    all_markers.push(marker);
-
-}
+    // Zombies
+    for (var i = 0; i < amount_of_zombies; i++) {
+      var lat = get_near_lat(inputed_lat);
+      var lng = get_near_lng(inputed_lng);
+      var image = `zombie.png`;
+      data = data + (lat.toString() + " " + lng.toString() + " ") + "zombie.png" + " ";
     }
-</script>
+
+    // Weapons
+    for (var i = 0; i < amount_of_weapons; i++) {
+      var lat = get_near_lat(inputed_lat);
+      var lng = get_near_lng(inputed_lng);
+      var image = `weapons.png`; 
+      data = data + (lat.toString() + " " + lng.toString() + " ") + "zombie.png" + " ";
+    }
+
+    // Hospitals
+    for (var i = 0; i < amount_of_hospitals; i++) {
+      var lat = get_near_lat(inputed_lat);
+      var lng = get_near_lng(inputed_lng);
+      var image = `hospital.png`; 
+      data = data + (lat.toString() + " " + lng.toString() + " ") + "zombie.png" + " ";
+    }
+
+    
+    // Markers
+    var all_markers = [];
+    var markers = data.split("\n");
+    
+    function initMap() {
+        zombie_map = new google.maps.Map(document.getElementById('zombie_map'), 
+                                          {
+                                            zoom: 3, 
+                                            center: {lat:inputed_lat, lng: inputed_lng}
+                                          });    
+        
+        old_position = new google.maps.Marker({
+        position: {lat: inputed_lat, lng: inputed_lng},
+        map: zombie_map,
+        });
+        
+        for (var i = 0; i < markers.length; i++) {
+            
+            // Point
+            var marker_data = markers[i].trim();
+            marker_data = marker_data.split(" ");
+            
+            // LatLng
+            var latitude = marker_data[0];
+            var longitude = marker_data[1];
+            
+            // Emoji (Game object)
+            var emoji = marker_data[2];
+            
+            // Point position
+            var marker_position = new google.maps.LatLng(latitude, longitude);
+            
+            // Marker
+            var marker = new google.maps.Marker({
+                position: marker_position,
+                map: zombie_map,
+                icon: emoji
+            });
+
+            // Store the point
+            all_markers.push(marker);
+        }
+       
+        if(navigator.geolocation) {
+
+          // Watch the user position
+          zombie_map.setZoom(15);
+          navigator.geolocation.watchPosition(set_my_position);
+        }
+        else {
+
+          // Alerts the user that geolocation does not work  
+          alert("Geolocation doesn't work in your browser");
+        }
+    }   
+
+    function get_near_lat(lat){
+      return lat.toString();
+    }
+    
+    function get_near_lng(lng){
+      return lng.toString();
+    }
+
+    function set_my_position(pos){
+        
+        // Remove the old position marker from the map. 
+        // null means “no map”.
+        old_position.setMap(null);
+        
+        var position = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        
+        // user marker
+        var marker = new google.maps.Marker({
+                position: position,
+                map: zombie_map
+            });
+        
+        // Set center of map to the user position with zoom
+        zombie_map.setCenter(position);
+
+        
+        // This saves the new position marker you just created as the old_position 
+        // Next time we'll know where the previous one was.
+        old_position = marker;
+
+        for (var i = 0; i < all_markers.length; i++) {
+            
+          // Distance using computeDistanceBetween from Maps API
+          var distance = google.maps.geometry.spherical.computeDistanceBetween(position, all_markers[i].getPosition());
+          if(distance < tolerance){
+          
+          // Get the game object
+          var what_is_it = all_markers[i].getIcon();
+
+            what_is_it = what_is_it.replace(".png", "");
+            alert("Found the " + what_is_it );
+            
+            // Remove the game object 
+            all_markers[i].setMap(null);
+            
+            if(what_is_it != "zombie"){
+              score += 10;
+              alert("Your score is " + score);
+              console.log(score);
+            }
+          }
+    }
+          
+    }
+    </script>
+      <script defer
+      <script async defer
+              src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_H6uKYmS-lwxEkE6ULrW2mFnS3z-4cEg&callback=initMap&libraries=geometry">
+      </script>    
   </body>
 </html>
