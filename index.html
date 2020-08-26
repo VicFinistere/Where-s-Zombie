@@ -17,6 +17,7 @@
     <div id="zombie_map"></div>
     <script>
     var zombie_map;
+    var all_markers = [];
     var data = `47.270000 -1.517220 zombie
 47.270010 -1.517221 hospital
 47.270020 -1.517222 weapons
@@ -31,7 +32,7 @@ var markers = data.split("\n");
   maximumAge: 0
 };
 
-function success(pos) {
+function set_my_position(pos) {
   var crd = pos.coords;
 
   console.log('Votre position actuelle est :');
@@ -48,14 +49,15 @@ function success(pos) {
     var marker = new google.maps.Marker({position: marker_position,
                                       map: zombie_map,
                                         icon: icon});
-    all_markers.push(marker);
 }
 
-function error(err) {
-  console.warn(`ERREUR (${err.code}): ${err.message}`);
+if(navigator.geolocation) {
+    navigator.geolocation.watchPosition(set_my_position);
+}
+else {
+    alert("Geolocation doesn't work in your browser");
 }
 
-navigator.geolocation.getCurrentPosition(success, error, options);
     function initMap() {
       
       zombie_map = new google.maps.Map(document.getElementById('zombie_map'), {
@@ -66,7 +68,7 @@ navigator.geolocation.getCurrentPosition(success, error, options);
 for(var i=0; i < data.length; i++){
     
     // Marker
-    var marker_data = markers[i].trim();
+    var marker_data = data[i].trim();
     marker_data = marker_data.split(" ");
     
     // LatLng
