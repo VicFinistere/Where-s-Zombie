@@ -1,0 +1,104 @@
+<html>
+  <head>
+    <title>My page title</title>
+  </head>
+  <style>
+  #zombie_map {
+    height: 100%;
+    width: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    background-color: grey;
+}
+  </style>
+  <body>
+  
+    <div id="zombie_map"></div>
+    <script>
+    var zombie_map;
+    var data = `47.270000 -1.517220 zombie
+47.270010 -1.517221 hospital
+47.270020 -1.517222 weapons
+47.270030 -1.517223 weapons
+47.270040 -1.517224 weapons
+47.270050 -1.517225 weapons`;
+var markers = data.split("\n");
+    
+    var options = {
+  enableHighAccuracy: true,
+  timeout: 5000,
+  maximumAge: 0
+};
+
+function success(pos) {
+  var crd = pos.coords;
+
+  console.log('Votre position actuelle est :');
+  console.log(`Latitude : ${crd.latitude}`);
+  console.log(`Longitude : ${crd.longitude}`);
+  console.log(`La précision est de ${crd.accuracy} mètres.`);
+  
+    icon = "https://icons.iconarchive.com/icons/hopstarter/superhero-avatar/24/Avengers-Hawkeye-icon.png";
+    
+    // Position
+    var marker_position = new google.maps.LatLng(crd.latitude, crd.longitude);
+   
+    // Marker
+    var marker = new google.maps.Marker({position: marker_position,
+                                      map: zombie_map,
+                                        icon: icon});
+    all_markers.push(marker);
+}
+
+function error(err) {
+  console.warn(`ERREUR (${err.code}): ${err.message}`);
+}
+
+navigator.geolocation.getCurrentPosition(success, error, options);
+    function initMap() {
+      
+      zombie_map = new google.maps.Map(document.getElementById('zombie_map'), {
+            zoom: 15,
+            center: {lat: 47.270000, lng:-1.517220}
+        });
+
+for(var i=0; i < data.length; i++){
+    
+    // Marker
+    var marker_data = markers[i].trim();
+    marker_data = marker_data.split(" ");
+    
+    // LatLng
+    var latitude = marker_data[0];
+    var longitude = marker_data[1];
+  
+    // Emoji
+    var emoji = marker_data[2];
+    
+    var icon = "";
+    if(emoji == "zombie"){
+      icon = "https://icons.iconarchive.com/icons/martin-berube/character/24/Zombie-icon.png";
+    } else if(emoji == "hospital"){
+      icon = "https://icons.iconarchive.com/icons/fatcow/farm-fresh/32/hospital-icon.png";
+    } else if(emoji == "weapons"){
+      icon = "https://icons.iconarchive.com/icons/jeanette-foshee/simpsons-09/32/Townspeople-Frinks-death-ray-gun-icon.png";
+    } 
+    
+    // Position
+    var marker_position = new google.maps.LatLng(latitude, longitude);
+   
+    // Marker
+    var marker = new google.maps.Marker({position: marker_position,
+                                      map: zombie_map,
+                                        icon: icon});
+    all_markers.push(marker);
+
+}
+    }
+</script>
+    <script defer
+src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_H6uKYmS-lwxEkE6ULrW2mFnS3z-4cEg&callback=initMap">
+</script>
+  </body>
+</html>
